@@ -362,4 +362,18 @@ def forward_receipt(message):
     bot.reply_to(message, client_reply)
 
 print("Bot is up and running...")
-bot.infinity_polling(timeout=10, long_polling_timeout=5, skip_pending=True)
+@bot.message_handler(commands=['stats'])
+def get_stats(message):
+    if str(message.chat.id) != ADMIN_ID:
+        return
+    data = load_data()
+    total_users = len(data.get("users", {}))
+    pending_count = len(data.get("pending_orders", {}))
+    
+    bot.send_message(
+        ADMIN_ID,
+        f"📊 <b>የቦቱ አጠቃላይ መረጃ (Stats)፦</b>\n\n"
+        f"👥 <b>ቦቱን የጀመሩ ተጠቃሚዎች፦</b> {total_users} ሰው\n"
+        f"⏳ <b>ያልተፈጸሙ ትዕዛዞች፦</b> {pending_count} እቃ"
+    )
+    bot.infinity_polling(timeout=10, long_polling_timeout=5, skip_pending=True)
