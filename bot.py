@@ -5,12 +5,12 @@ from telebot import types
 from threading import Thread
 from flask import Flask
 
-# --- Keep-Alive Web Server ---
+# --- Keep-Alive Web Server (ለ Railway 24/7 እንዳይቋረጥ) ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is running perfectly 24/7!"
+    return "TechPro Bot is active and running!"
 
 def run_web():
     port = int(os.environ.get("PORT", 8080))
@@ -54,7 +54,7 @@ def save_data_async():
             pass
     Thread(target=_save, daemon=True).start()
 
-# --- ዋና ሜኑ (በምስልህ ላይ ካሉት ቁልፎች ጋር አንድ አይነት) ---
+# --- ዋና ሜኑ ---
 def get_main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     btn_shop = types.KeyboardButton("🛍 Shop")
@@ -94,7 +94,7 @@ def start_cmd(message):
     )
     bot.send_message(message.chat.id, welcome_text, reply_markup=get_main_menu())
 
-# --- ለአድሚን ብቻ የሚታይ ስታቲስቲክስ ---
+# --- ለአድሚን ብቻ የሚታይ ስታቲስቲክስ (/stats) ---
 @bot.message_handler(commands=['stats'])
 def stats_cmd(message):
     if str(message.chat.id) != ADMIN_ID:
@@ -110,7 +110,7 @@ def stats_cmd(message):
     )
     bot.send_message(message.chat.id, text)
 
-# --- 🛍 Shop ቁልፍ ሲነካ ---
+# --- 🛍 Shop ቁልፍ ---
 @bot.message_handler(func=lambda msg: msg.text in ["🛍 Shop", "🛍 እቃዎች ዝርዝር"])
 def show_products(message):
     markup = types.InlineKeyboardMarkup(row_width=1)
@@ -121,7 +121,7 @@ def show_products(message):
     )
     bot.send_message(message.chat.id, "🛒 <b>የሚፈልጉትን አገልግሎት ይምረጡ፦</b>", reply_markup=markup)
 
-# --- 👤 My Profile ቁልፍ ሲነካ ---
+# --- 👤 My Profile ቁልፍ ---
 @bot.message_handler(func=lambda msg: msg.text in ["👤 My Profile", "📦 የኔ ትዕዛዞች"])
 def show_profile(message):
     user_id = message.chat.id
@@ -134,7 +134,7 @@ def show_profile(message):
         f"ሁኔታ፦ ንቁ ተጠቃሚ (Active)"
     )
 
-# --- 🎉 Refer & Earn ቁልፍ ሲነካ ---
+# --- 🎉 Refer & Earn ቁልፍ ---
 @bot.message_handler(func=lambda msg: msg.text == "🎉 Refer & Earn")
 def refer_earn(message):
     bot_info = bot.get_me()
@@ -146,7 +146,7 @@ def refer_earn(message):
         f"ሰዎችን በመጋበዝ ልዩ ቅናሾችን ያግኙ!"
     )
 
-# --- 🤝 Support ቁልፍ ሲነካ ---
+# --- 🤝 Support ቁልፍ ---
 @bot.message_handler(func=lambda msg: msg.text in ["🤝 Support", "📞 ድጋፍ (Support)"])
 def support_cmd(message):
     bot.send_message(message.chat.id, f"ለማንኛውም ጥያቄና እርዳታ አድሚናችንን ያነጋግሩ፦ @{ADMIN_USERNAME}")
