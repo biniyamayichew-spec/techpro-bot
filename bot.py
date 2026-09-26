@@ -19,7 +19,7 @@ def run_web():
 Thread(target=run_web, daemon=True).start()
 
 # --- Configs ---
-BOT_TOKEN = "8999505407:AAG7ZPbLcLImO_yU2oDz8twH4gYlMPnI-wg"
+BOT_TOKEN = "8999505407:AAHuLDm75Z-_UhOaDG0ud12uwOyhcmc5kyg"
 ADMIN_ID = "7784016689"
 ADMIN_USERNAME = "techpro_et"
 TELEBIRR_PHONE = "0944905958"
