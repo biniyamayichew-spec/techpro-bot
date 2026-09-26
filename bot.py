@@ -5,12 +5,12 @@ from telebot import types
 from threading import Thread
 from flask import Flask
 
-# --- Keep-Alive Web Server (ለ Railway 24/7 እንዳይቋረጥ) ---
+# --- Keep-Alive Web Server ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "TechPro Bot is 100% active and running fast!"
+    return "Bot is running perfectly 24/7!"
 
 def run_web():
     port = int(os.environ.get("PORT", 8080))
@@ -25,10 +25,8 @@ ADMIN_USERNAME = "techpro_et"
 TELEBIRR_PHONE = "0944905958"
 ACCOUNT_NAME = "Biniyam Ayichew"
 
-# threaded=True እያንዳንዱን ትዕዛዝ በቅጽበት ለማስተናገድ ይረዳል
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML", threaded=True)
 
-# የቀረ Webhook ካለ በቅጽበት ማጥፊያ
 try:
     bot.remove_webhook()
 except Exception:
@@ -36,7 +34,6 @@ except Exception:
 
 DB_FILE = "database.json"
 
-# --- ፍጥነትን ለመጨመር መረጃውን በ RAM Memory መያዝ ---
 def load_data():
     if not os.path.exists(DB_FILE):
         return {"users": {}, "pending_orders": {}}
@@ -49,7 +46,6 @@ def load_data():
 db_data = load_data()
 
 def save_data_async():
-    # ፋይል መጻፍ የቦቱን ፍጥነት እንዳያዘገየው በጀርባ (Thread) እንዲሰራ ማድረግ
     def _save():
         try:
             with open(DB_FILE, "w", encoding="utf-8") as f:
@@ -58,22 +54,24 @@ def save_data_async():
             pass
     Thread(target=_save, daemon=True).start()
 
-# --- ኪቦርድ ሜኑ ---
+# --- ዋና ሜኑ (በምስልህ ላይ ካሉት ቁልፎች ጋር አንድ አይነት) ---
 def get_main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    markup.add(
-        types.KeyboardButton("🛍 እቃዎች ዝርዝር"),
-        types.KeyboardButton("📦 የኔ ትዕዛዞች"),
-        types.KeyboardButton("📞 ድጋፍ (Support)")
-    )
+    btn_shop = types.KeyboardButton("🛍 Shop")
+    btn_profile = types.KeyboardButton("👤 My Profile")
+    btn_refer = types.KeyboardButton("🎉 Refer & Earn")
+    btn_support = types.KeyboardButton("🤝 Support")
+    markup.add(btn_shop)
+    markup.add(btn_profile, btn_refer)
+    markup.add(btn_support)
     return markup
 
-# --- የ Start ትዕዛዝ (በቅጽበት ምላሽ የሚሰጥ) ---
+# --- የ Start ትዕዛዝ ---
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
     user_id = str(message.chat.id)
     username = message.from_user.username or "NoUsername"
-    first_name = message.from_user.first_name or "Customer"
+    first_name = message.from_user.first_name or "User"
 
     if "users" not in db_data:
         db_data["users"] = {}
@@ -87,17 +85,16 @@ def start_cmd(message):
         save_data_async()
 
     welcome_text = (
-        f"🛍 <b>እንኳን ወደ TechPro Digital Store በደህና መጡ!</b>\n\n"
-        f"እዚህ የተለያዩ ፕሪሚየም የዲጂታል አገልግሎቶችን በታላቅ ቅናሽ በቴሌብር ማግኘት ይችላሉ።\n\n"
-        f"✨ <b>ፕሪሚየም AI አካውንቶች</b> (Gemini Pro, ChatGPT...)\n"
-        f"📚 <b>ትምህርታዊ መተግበሪያዎች</b> (Duolingo, Canva...)\n"
-        f"🛡 <b>ፕሪሚየም VPN እና ሌሎችም</b>\n\n"
-        f"⚡ <i>ፈጣን እና አስተማማኝ አቅርቦት!</i>\n"
-        f"ለመጀመር ከታች ያሉትን ምርጫዎች ይጠቀሙ።"
+        f"🛍 <b>ወደ ፕሪሚየም ዲጂታል መደብር እንኳን በደህና መጡ!</b>\n\n"
+        f"የምንሰጣቸው አገልግሎቶች፦\n"
+        f"• ፕሪሚየም AI አካውንቶች (Gemini Pro፣ ChatGPT...)\n"
+        f"• የመዝናኛ እና የሶፍትዌር አካውንቶች\n"
+        f"• ፈጣንና አስተማማኝ አቅርቦት\n\n"
+        f"👇 ለመቀጠል ከታች ካሉት አማራጮች አንዱን ይምረጡ፦"
     )
     bot.send_message(message.chat.id, welcome_text, reply_markup=get_main_menu())
 
-# --- ለአንተ ብቻ የሚታይ ስታቲስቲክስ (/stats) ---
+# --- ለአድሚን ብቻ የሚታይ ስታቲስቲክስ ---
 @bot.message_handler(commands=['stats'])
 def stats_cmd(message):
     if str(message.chat.id) != ADMIN_ID:
@@ -107,28 +104,56 @@ def stats_cmd(message):
     pending_orders = len(db_data.get("pending_orders", {}))
 
     text = (
-        f"📊 <b>የ TechPro Bot አጠቃላይ ስታቲስቲክስ፦</b>\n\n"
-        f"👥 <b>ጠቅላላ የተመዘገቡ ተጠቃሚዎች፦</b> {total_users} ሰው\n"
-        f"⏳ <b>ያልተፈጸሙ ክፍያዎች/ትዕዛዞች፦</b> {pending_orders} እቃ\n\n"
-        f"⚡ <i>ቦቱ 24 ሰዓት በከፍተኛ ፍጥነት እየሰራ ነው!</i>"
+        f"📊 <b>የቦቱ አጠቃላይ መረጃ፦</b>\n\n"
+        f"👥 <b>ጠቅላላ ተጠቃሚዎች፦</b> {total_users} ሰው\n"
+        f"⏳ <b>ያልተፈጸሙ ትዕዛዞች፦</b> {pending_orders} እቃ"
     )
     bot.send_message(message.chat.id, text)
 
-# --- የእቃዎች ዝርዝር (ፈጣን Inline Keyboard) ---
-@bot.message_handler(func=lambda msg: msg.text == "🛍 እቃዎች ዝርዝር")
+# --- 🛍 Shop ቁልፍ ሲነካ ---
+@bot.message_handler(func=lambda msg: msg.text in ["🛍 Shop", "🛍 እቃዎች ዝርዝር"])
 def show_products(message):
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(
-        types.InlineKeyboardButton("✨ Gemini Pro 1 Month - 350 ETB", callback_data="buy_gemini"),
-        types.InlineKeyboardButton("🤖 ChatGPT Plus 1 Month - 450 ETB", callback_data="buy_chatgpt"),
-        types.InlineKeyboardButton("🎨 Canva Pro 1 Year - 250 ETB", callback_data="buy_canva")
+        types.InlineKeyboardButton("✨ Gemini Pro (1 Month) - 350 ETB", callback_data="buy_gemini"),
+        types.InlineKeyboardButton("🤖 ChatGPT Plus (1 Month) - 450 ETB", callback_data="buy_chatgpt"),
+        types.InlineKeyboardButton("🎨 Canva Pro (1 Year) - 250 ETB", callback_data="buy_canva")
     )
     bot.send_message(message.chat.id, "🛒 <b>የሚፈልጉትን አገልግሎት ይምረጡ፦</b>", reply_markup=markup)
 
-# --- የግዢ ሂደት (Inline Button እንደተነካ በሰከንድ እውቅና ሰጥቶ መልእክት ይልካል) ---
+# --- 👤 My Profile ቁልፍ ሲነካ ---
+@bot.message_handler(func=lambda msg: msg.text in ["👤 My Profile", "📦 የኔ ትዕዛዞች"])
+def show_profile(message):
+    user_id = message.chat.id
+    name = message.from_user.first_name or "User"
+    bot.send_message(
+        message.chat.id,
+        f"👤 <b>የመለያዎ መረጃ፦</b>\n\n"
+        f"ስም፦ {name}\n"
+        f"መታወቂያ (ID)፦ <code>{user_id}</code>\n"
+        f"ሁኔታ፦ ንቁ ተጠቃሚ (Active)"
+    )
+
+# --- 🎉 Refer & Earn ቁልፍ ሲነካ ---
+@bot.message_handler(func=lambda msg: msg.text == "🎉 Refer & Earn")
+def refer_earn(message):
+    bot_info = bot.get_me()
+    ref_link = f"https://t.me/{bot_info.username}?start={message.chat.id}"
+    bot.send_message(
+        message.chat.id,
+        f"🎉 <b>ጓደኞችዎን ይጋብዙ!</b>\n\n"
+        f"የእርስዎ መጋበዣ ሊንክ፦\n<code>{ref_link}</code>\n\n"
+        f"ሰዎችን በመጋበዝ ልዩ ቅናሾችን ያግኙ!"
+    )
+
+# --- 🤝 Support ቁልፍ ሲነካ ---
+@bot.message_handler(func=lambda msg: msg.text in ["🤝 Support", "📞 ድጋፍ (Support)"])
+def support_cmd(message):
+    bot.send_message(message.chat.id, f"ለማንኛውም ጥያቄና እርዳታ አድሚናችንን ያነጋግሩ፦ @{ADMIN_USERNAME}")
+
+# --- የእቃ ግዢ ሂደት ---
 @bot.callback_query_handler(func=lambda call: call.data.startswith("buy_"))
 def process_buy(call):
-    # ቴሌግራም እንዳይዘገይ እና ስፒነሩ ወዲያው እንዲጠፋ
     bot.answer_callback_query(call.id)
 
     products = {
@@ -156,19 +181,13 @@ def process_buy(call):
     )
     bot.send_message(call.message.chat.id, payment_info)
 
-# --- ደረሰኝ መቀበያና ለአድሚን መላኪያ ---
+# --- ደረሰኝ መቀበያ ---
 @bot.message_handler(content_types=['photo', 'text'])
 def handle_receipt(message):
     user_id = str(message.chat.id)
     pending = db_data.get("pending_orders", {}).get(user_id)
 
     if not pending:
-        if message.text == "📦 የኔ ትዕዛዞች":
-            bot.send_message(message.chat.id, "📦 እስካሁን የፈጸሙት የተጠናቀቀ ትዕዛዝ የለም።")
-            return
-        elif message.text == "📞 ድጋፍ (Support)":
-            bot.send_message(message.chat.id, f"ለማንኛውም ጥያቄ አድሚናችንን ያነጋግሩ፦ @{ADMIN_USERNAME}")
-            return
         return
 
     item = pending["item"]
@@ -195,7 +214,7 @@ def handle_receipt(message):
 
     bot.reply_to(message, "✅ <b>ደረሰኝዎ ደርሶናል!</b> ክፍያዎ ተረጋግጦ እቃዎ በደቂቃዎች ውስጥ ይላክልዎታል።")
 
-# --- የአድሚን ማረጋገጫ (Approve / Reject) ---
+# --- የአድሚን ማረጋገጫ ---
 @bot.callback_query_handler(func=lambda call: call.data.startswith("app_") or call.data.startswith("rej_"))
 def admin_action(call):
     bot.answer_callback_query(call.id)
@@ -216,5 +235,4 @@ def admin_action(call):
         bot.edit_message_caption("❌ ይህ ትዕዛዝ ውድቅ ተደርጓል።", chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(user_id, f"❌ <b>ክፍያዎ አልተረጋገጠም</b>። እባክዎ ትክክለኛውን ደረሰኝ ያያይዙ ወይም አድሚኑን ያነጋግሩ፦ @{ADMIN_USERNAME}")
 
-# --- ቦቱን ያለ ምንም መዘግየት በቅጽበት ማስነሳት ---
 bot.infinity_polling(skip_pending=True, timeout=20, long_polling_timeout=10)
